@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+
+if [ -n "$GEM_SOURCES" ] && ! [ -e "/tmp/gem_sources_added" ]; then
+	for src in $(echo $GEM_SOURCES | tr ',' ' ')
+	do
+		echo "Adding gem source $src"
+		gem sources -a $src
+	done
+	touch /tmp/gem_sources_added
+fi
+
+for index in $@
+do
+	echo $index
+	set -- "$index"
+	IFS="/"; declare -a Array=($*)
+	if [[ ${#Array[@]} -eq 1 ]]; then
+		PLUGIN="${Array[0]}"
+		REPO=$DEFAULT_PLUGINS_REPO
+	else
+		REPO="${Array[0]}"
+		PLUGIN="${Array[1]}"
+	fi
+
+	IFS="@"; declare -a PluginArray=("${PLUGIN}")
+	if [[ ${#PluginArray[@]} -eq 1 ]]; then
+		VERSION=$DEFAULT_PLUGINS_VERSION
+	else
+		PLUGIN="${PluginArray[0]}"
+		VERSION="${PluginArray[1]}"
+	fi
+
+	wget https://github.com/$REPO/sensu-plugins-$PLUGIN/archive/$VERSION.tar.gz
+	tar -xzvf $VERSION.tar.gz
+	rm *.tar.gz
+	cd sensu-plugins-$PLUGIN-$VERSION
+	sed -i'' '/signing_key/d' sensu-plugins-$PLUGIN.gemspec #We don't have the private key
+	gem build sensu-plugins-$PLUGIN.gemspec
+	gem uninstall -x sensu-plugins-$PLUGIN
+	gem install --no-ri --no-rdoc --no-wrapper sensu-plugins-*.gem
+	cd ..
+	rm -rf sensu-plugins-$PLUGIN-$VERSION
+done
