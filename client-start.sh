@@ -8,6 +8,13 @@ if [[ "$IPERF_SERVER" == "true" ]]; then
 fi
 
 if [[ "$CLIENT_SUBSCRIPTIONS" == *ceph* ]]; then
+    curl 'https://download.ceph.com/keys/release.asc' | apt-key add -
+    if [ -e "/host_sys/fs/selinux" ]; then
+        mkdir -p /sys/fs/selinux
+        mount -t selinuxfs selinuxfs /sys/fs/selinux
+        mount -o remount,ro,bind /sys/fs/selinux
+    fi
+    apt-add-repository "deb https://download.ceph.com/debian-nautilus/ $(lsb_release -sc) main"
     apt-get update
     apt-get install -yy ceph
 
