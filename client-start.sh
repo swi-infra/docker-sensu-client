@@ -14,6 +14,12 @@ if [ -e "/host_sys/fs/selinux" ]; then
     mount -o remount,ro,bind /sys/fs/selinux
 fi
 
+if [ -n "$APT_MIRROR" ]; then
+    SRC_URL="$(grep '^deb' "/etc/apt/sources.list" | head -1 | awk '{print $2}')"
+
+    sed -i "s#${SRC_URL}#${APT_MIRROR}#g" "/etc/apt/sources.list"
+fi
+
 if [[ "$CLIENT_SUBSCRIPTIONS" == *ceph* ]]; then
     curl 'https://download.ceph.com/keys/release.asc' | apt-key add -
     apt-add-repository "deb https://download.ceph.com/debian-nautilus/ $(lsb_release -sc) main"
