@@ -31,4 +31,4 @@ if [[ "$CLIENT_SUBSCRIPTIONS" == *ceph* ]]; then
     fi
 fi
 
-/bin/start client
+su sensu -s /bin/bash -c 'PATH="$PATH:/opt/sensu/embedded/bin/" /bin/start client'
