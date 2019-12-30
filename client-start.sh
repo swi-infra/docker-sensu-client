@@ -31,4 +31,8 @@ if [[ "$CLIENT_SUBSCRIPTIONS" == *ceph* ]]; then
     fi
 fi
 
-/bin/start client
+# Retry
+set +e
+for ((i=0; i<5; i++)); do
+    /bin/start client
+done
